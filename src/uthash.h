@@ -37,7 +37,8 @@ typedef unsigned int uint32_t;
 typedef unsigned char uint8_t;
 #elif defined(HASH_NO_STDINT) && HASH_NO_STDINT
 #else
-#include <stdint.h>   /* uint8_t, uint32_t */
+//#include <stdint.h>   /* uint8_t, uint32_t */
+#include	<basetsd.h>
 #endif
 
 /* These macros use decltype or the earlier __typeof GNU extension.
@@ -181,7 +182,7 @@ do {                                                                            
 #define HASH_BLOOM_MAKE(tbl,oomed)                                               \
 do {                                                                             \
   (tbl)->bloom_nbits = HASH_BLOOM;                                               \
-  (tbl)->bloom_bv = (uint8_t*)uthash_malloc(HASH_BLOOM_BYTELEN);                 \
+  (tbl)->bloom_bv = (BYTE*)uthash_malloc(HASH_BLOOM_BYTELEN);                 \
   if (!(tbl)->bloom_bv) {                                                        \
     HASH_RECORD_OOM(oomed);                                                      \
   } else {                                                                       \
@@ -199,10 +200,10 @@ do {                                                                            
 #define HASH_BLOOM_BITTEST(bv,idx) (bv[(idx)/8U] & (1U << ((idx)%8U)))
 
 #define HASH_BLOOM_ADD(tbl,hashv)                                                \
-  HASH_BLOOM_BITSET((tbl)->bloom_bv, ((hashv) & (uint32_t)((1UL << (tbl)->bloom_nbits) - 1U)))
+  HASH_BLOOM_BITSET((tbl)->bloom_bv, ((hashv) & (UINT32)((1UL << (tbl)->bloom_nbits) - 1U)))
 
 #define HASH_BLOOM_TEST(tbl,hashv)                                               \
-  HASH_BLOOM_BITTEST((tbl)->bloom_bv, ((hashv) & (uint32_t)((1UL << (tbl)->bloom_nbits) - 1U)))
+  HASH_BLOOM_BITTEST((tbl)->bloom_bv, ((hashv) & (UINT32)((1UL << (tbl)->bloom_nbits) - 1U)))
 
 #else
 #define HASH_BLOOM_MAKE(tbl,oomed)
@@ -696,13 +697,13 @@ do {                                                                            
 #endif
 
 #if !defined (get16bits)
-#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)             \
-                       +(uint32_t)(((const uint8_t *)(d))[0]) )
+#define get16bits(d) ((((UINT32)(((const BYTE *)(d))[1])) << 8)             \
+                       +(UINT32)(((const BYTE *)(d))[0]) )
 #endif
 #define HASH_SFH(key,keylen,hashv)                                               \
 do {                                                                             \
   unsigned const char *_sfh_key=(unsigned const char*)(key);                     \
-  uint32_t _sfh_tmp, _sfh_len = (uint32_t)keylen;                                \
+  UINT32 _sfh_tmp, _sfh_len = (UINT32)keylen;                                \
                                                                                  \
   unsigned _sfh_rem = _sfh_len & 3U;                                             \
   _sfh_len >>= 2;                                                                \
@@ -711,7 +712,7 @@ do {                                                                            
   /* Main loop */                                                                \
   for (;_sfh_len > 0U; _sfh_len--) {                                             \
     hashv    += get16bits (_sfh_key);                                            \
-    _sfh_tmp  = ((uint32_t)(get16bits (_sfh_key+2)) << 11) ^ hashv;              \
+    _sfh_tmp  = ((UINT32)(get16bits (_sfh_key+2)) << 11) ^ hashv;              \
     hashv     = (hashv << 16) ^ _sfh_tmp;                                        \
     _sfh_key += 2U*sizeof (uint16_t);                                            \
     hashv    += hashv >> 11;                                                     \
@@ -721,7 +722,7 @@ do {                                                                            
   switch (_sfh_rem) {                                                            \
     case 3: hashv += get16bits (_sfh_key);                                       \
             hashv ^= hashv << 16;                                                \
-            hashv ^= (uint32_t)(_sfh_key[sizeof (uint16_t)]) << 18;              \
+            hashv ^= (UINT32)(_sfh_key[sizeof (uint16_t)]) << 18;              \
             hashv += hashv >> 11;                                                \
             break;                                                               \
     case 2: hashv += get16bits (_sfh_key);                                       \
@@ -1117,11 +1118,11 @@ typedef struct UT_hash_table {
     * the hash will still work, albeit no longer in constant time. */
    unsigned ineff_expands, noexpand;
 
-   uint32_t signature; /* used only to find hash tables in external analysis */
+   UINT32 signature; /* used only to find hash tables in external analysis */
 #ifdef HASH_BLOOM
-   uint32_t bloom_sig; /* used only to test bloom exists in external analysis */
-   uint8_t *bloom_bv;
-   uint8_t bloom_nbits;
+   UINT32 bloom_sig; /* used only to test bloom exists in external analysis */
+   BYTE *bloom_bv;
+   BYTE bloom_nbits;
 #endif
 
 } UT_hash_table;
